@@ -1,28 +1,89 @@
 import cv2
 import numpy as np
 
+left_prev_slope = 0
+
+# RIGHT PREV SLOPE
+right_slope = 0
+
 
 def canny(img, low_threshold, high_threshold):
     return cv2.Canny(img, low_threshold, high_threshold)
 
 
-def calculate_position(x1, y1, x2, y2, height):
-    m = (y1 - y2) / (x2 - x1)
+def calculate_position(x1, y1, height, m):
     b = y1 + (m * x1)
     y = height
     x = (b - y) / m
     return int(x)
 
 
+def calculate_slope(x1, y1, x2, y2):
+    return (y1 - y2) / (x2 - x1)
+
+
 def draw_lines(img, lines, line_height, color=[255, 0, 0], thickness=5):
+    global left_prev_slope
+    slope_list = []
+    x1a = []
+    y1a = []
+
+    global right_slope
+    slope_list1 = []
+    x1b = []
+    y1b = []
 
     image_height = img.shape[0]
+    image_width = img.shape[1]
 
     for line in lines:
         for x1, y1, x2, y2 in line:
-            new_x1 = calculate_position(x1, y1, x2, y2, image_height)
-            new_x2 = calculate_position(x1, y1, x2, y2, line_height)
-            cv2.line(img, (new_x1, image_height), (new_x2, line_height), color, thickness)
+            # LEFT LANE
+            if (x1 > 0) & (x1 < image_width / 2):
+                x1a.append(x1)
+                y1a.append(y1)
+                slope_list.append(abs(calculate_slope(x1, y1, x2, y2)))
+            # RIGHT LANE
+            if (x1 > 0) & (x1 > image_width / 2):
+                x1b.append(x1)
+                y1b.append(y1)
+                slope_list1.append(abs(calculate_slope(x1, y1, x2, y2)))
+
+    if sum(slope_list) > 0:
+        current_average = sum(slope_list) / len(slope_list)
+
+        x1 = sum(x1a) / len(x1a)
+        y1 = sum(y1a) / len(y1a)
+        # print(current_average)
+
+        if left_prev_slope > 0:
+            # NEXT AVERAGE
+            next_ave = (current_average + left_prev_slope) / 2
+        else:
+            next_ave = current_average
+
+        left_prev_slope = next_ave
+
+        new_x1 = calculate_position(x1, y1, image_height, next_ave)
+        new_x2 = calculate_position(x1, y1, line_height, next_ave)
+        cv2.line(img, (new_x1, image_height), (new_x2, line_height), color, thickness)
+
+    if sum(slope_list1) > 0:
+        current_average = sum(slope_list1) / len(slope_list1)
+
+        x1 = sum(x1b) / len(x1b)
+        y1 = sum(y1b) / len(y1b)
+
+        right_slope = current_average
+
+        if right_slope > 0:
+            ave = (current_average + right_slope) / 2
+        else:
+            ave = current_average
+
+        new_x1 = calculate_position(x1, y1, image_height, -ave)
+        new_x2 = calculate_position(x1, y1, line_height, -ave)
+        cv2.line(img, (new_x1, image_height), (new_x2, line_height), color, thickness)
 
 
 def gaussian_blur(img, kernel_size):
