@@ -74,15 +74,15 @@ def draw_lines(img, lines, line_height, color=[255, 0, 0], thickness=5):
         x1 = sum(x1b) / len(x1b)
         y1 = sum(y1b) / len(y1b)
 
-        right_slope = current_average
-
         if right_slope > 0:
-            ave = (current_average + right_slope) / 2
+            next_ave = (current_average + right_slope) / 2
         else:
-            ave = current_average
+            next_ave = current_average
 
-        new_x1 = calculate_position(x1, y1, image_height, -ave)
-        new_x2 = calculate_position(x1, y1, line_height, -ave)
+        right_slope = next_ave
+
+        new_x1 = calculate_position(x1, y1, image_height, -next_ave)
+        new_x2 = calculate_position(x1, y1, line_height, -next_ave)
         cv2.line(img, (new_x1, image_height), (new_x2, line_height), color, thickness)
 
 

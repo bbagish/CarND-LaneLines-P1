@@ -12,7 +12,6 @@ def start(file_name):
 
 
 def process_image(image):
-
     # CONVERT TO GRAYSCALE
     gray = helpers.grayscale(image)
     # APPLY GAUSSIAN BLUR
@@ -43,11 +42,10 @@ def process_image(image):
     lines = helpers.hough_lines(masked_edges, rho, theta, threshold,
                                 min_line_length, max_line_gap, line_height)
 
-    # Draw the lines on the 124,252,0edge image
+    # Draw the lines on the edge image
     lines_edges = helpers.weighted_img(lines, image, 0.8, 1, 0)
 
     plt.imshow(lines_edges, cmap='gray')
-    #plt.show()
     return lines_edges
 
 
